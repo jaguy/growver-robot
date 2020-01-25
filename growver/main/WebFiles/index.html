@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+	<title>Growver 2020 Test</title>
+	<!-- This line supppresses favicon request
+	<link rel="icon" href="data:,"> -->
+	<script src="https://code.jquery.com/jquery-latest.js"></script>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.1.0/bootstrap-slider.js"></script>
+<!--
+	<script src="jquery.min.js"></script>
+	<script src="jquery.plugin.js"></script>
+	-->
+<!-- Latest compiled JavaScript -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+   </head>
+   <body>
+		<h1> GROWVER </h1>
+		<button style="height:80px;width:130px"onclick="buttonRotateCCWFunction()">Rotate Left</button>
+		<button style="height:80px;width:130px"onclick="buttonForwardFunction()">Forward</button>
+		<button style="height:80px;width:130px"onclick="buttonRotateCWFunction()">Rotate Right</button>
+		<br>
+		<button style="height:80px;width:130px"onclick="buttonStopFunction()">Stop</button>
+		<button style="height:80px;width:130px"onclick="buttonReverseFunction()">Reverse</button>
+		<button style="height:80px;width:130px"onclick="buttonStopFunction()">Stop</button>
+		<br>
+		<button style="height:50px;width:197px"onclick="buttonPumpOnFunction()">Pump On</button>
+		<button style="height:50px;width:197px"onclick="buttonPumpOffFunction()">Pump Off</button>
+		<br>
+		<button style="height:40px;width:97px" onclick="window.location.href = '/fs/index.html'">User Home</button>
+		<button style="height:40px;width:97px" onclick="window.location.href = 'ota-page.html'">Firmware</button>
+		<button style="height:40px;width:97px" onclick="window.location.href = '/fs/'">File System</button>
+		<button style="height:40px;width:97px" onclick="window.location.href = 'http://www.growver.com'">About</button>
+		<br>
+		<button style="height:40px;width:97px"onclick="buttonServoPosition(0)">Servo Left</button>
+		<button style="height:40px;width:97px"onclick="buttonServoPosition(90)">Servo 0</button>
+		<button style="height:40px;width:97px"onclick="buttonServoPosition(180)">Servo Right</button>
+		<button style="height:40px;width:97px"onclick="buttonServoPosition(0)">Unassigned</button>
+		<p id="volts">Battery: 0.0V</p>
+
+		<div id="driveControl">
+			<div id="driveControlThumb"></div>
+		</div>
+
+   </body>
+
+	<script type="text/javascript">
+	console.log("Host Name:" + location.host);
+	// If no host name then assume this is a local file and connect to test IP address
+	if (location.host.charAt(0) == '')
+	{ var server = "http://192.168.0.126";
+	}
+	else
+	{
+		if (location.host.charAt(0) != '1')
+		{ var server = "http://growver.local";
+		} else
+		{ var server = "http://" + location.host;
+		}
+	}
+
+	url = server + "/api/v1";
+	console.log("URL:" + url);
+	setInterval("periodic_refresh();", 2000);
+	function periodic_refresh() {
+		const request = new XMLHttpRequest();
+
+		request.open("GET", url + "/status", true);
+		request.send();
+
+		request.onload = function()
+		{
+			var data = JSON.parse(this.response)
+			if (request.status >= 200 && request.status < 400)
+			{
+				document.getElementById("volts").innerHTML = "Battery: " + data.battery_v.toFixed(1) + "V";
+				//console.log("battery= " + data.battery_v);
+			}
+			else {
+			console.log("Error with GET");
+			}
+		}
+	}
+    function httpGetAsync(theUrl)
+    {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open("GET", theUrl, true);
+        xmlHttp.send(null);
+    }
+
+	var slider = document.getElementById("myRange");
+	var motorSpeed=50;
+
+	function httpPutAsync(api, payload)
+	{
+		var xhp = new XMLHttpRequest();
+		xhp.open("POST", url + api, true);
+		xhp.onreadystatechange = function () {
+    		if (xhp.readyState == 4 && xhp.status == 200) {}
+			// future state handler
+		}
+
+		xhp.send(payload);
+    }
+
+    function buttonForwardFunction()
+    {
+		httpPutAsync("/motor",JSON.stringify({left_speed:100, right_speed:100, left_dir:0, right_dir:0}));
+    }
+    function buttonReverseFunction()
+    {
+		httpPutAsync("/motor",JSON.stringify({left_speed:100, right_speed:100, left_dir:1, right_dir:1}));
+    }
+	function buttonRotateCWFunction()
+    {
+		httpPutAsync("/motor",JSON.stringify({left_speed:50, right_speed:50, left_dir:0, right_dir:1}));
+    }
+	function buttonRotateCCWFunction()
+    {
+		httpPutAsync("/motor",JSON.stringify({left_speed:50, right_speed:50, left_dir:1, right_dir:0}));
+    }
+	function buttonStopFunction()
+    {
+		httpPutAsync("/motor",JSON.stringify({left_speed:0, right_speed:0}));
+    }
+	function buttonPumpOnFunction()
+    {
+		httpPutAsync("/pump",JSON.stringify({ speed: 100}))
+    }
+	function buttonPumpOffFunction()
+    {
+		httpPutAsync("/pump",JSON.stringify({ speed: 0}))
+    }
+	function buttonServoPosition(angle)
+    {
+        httpPutAsync("/servo",'{"angle":'+ angle.toFixed() + '}');
+    }
+
+	/* Slider Without JQuery
+	var slider = new Slider('#ex1', {
+	});*/
+
+
+const throttle = (func, limit) => {
+  let inThrottle;
+  return function() {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  }
+};
+
+const emitPositionUpdate = (angle, magnitude) => {
+	angle *= 57.29;
+	angle += 90;
+	if (angle < 0) angle += 360;
+	if (magnitude > 100) magnitude = 100;
+
+	//console.log(angle, magnitude);
+	if ((angle > 345) || (angle < 15))
+	{
+		httpPutAsync('/motor','{"left_dir":0, "right_dir":0, "left_speed":' + magnitude.toFixed() + ',"right_speed":'+ magnitude.toFixed() + '}');
+		console.log('{"left_dir":0, "right_dir":0, "left_speed":' + magnitude.toFixed() + ',"right_speed":'+ magnitude.toFixed()+ '}');
+	}
+	else if ((angle > 170) && (angle < 190))
+	{
+		httpPutAsync('/motor','{"left_dir":1, "right_dir":1, "left_speed":' + magnitude.toFixed() + ',"right_speed":'+ magnitude.toFixed() + '}');
+		console.log('{"left_dir":1, "right_dir":1, "left_speed":' + magnitude.toFixed() + ',"right_speed":'+ magnitude.toFixed() + '}');
+	}
+	else if ((angle >= 15) && (angle <= 105))
+	{
+		// Slow right side by amount proportional to angle (up to 50% of magnitude)
+		var slowspeed = (magnitude / 2) + (magnitude / 2) * ((104 - angle)/ 90);
+		httpPutAsync('/motor','{"left_dir":0, "right_dir":0, "left_speed":' + magnitude.toFixed() + ',"right_speed":'+ slowspeed.toFixed() + '}');
+	}
+	else if ((angle >= 255) && (angle <= 345))
+	{
+		// Slow left side by amount proportional to angle
+		var slowspeed = (magnitude / 2) + (magnitude / 2) * ((angle - 254) / 90);
+		httpPutAsync('/motor','{"left_dir":1, "right_dir":1, "left_speed":' + slowspeed.toFixed() + '"right_speed":'+ magnitude.toFixed() + '}');
+	}
+};
+
+const DRIVE_CONTROL_RADIUS = 100;
+const DRIVE_THROTTLE_RATE = 250;
+
+const positionThrottleFunc = throttle(emitPositionUpdate, DRIVE_THROTTLE_RATE);
+
+$("#driveControlThumb").on('mousedown touchstart', (e) => {
+	if (e.stopPropagation) e.stopPropagation();
+	e.preventDefault();
+
+	let oldPageX = e.pageX;
+	let oldPageY = e.pageY;
+
+	if (e.originalEvent.touches && e.originalEvent.touches.length) {
+		oldPageX = e.originalEvent.touches[0].pageX;
+		oldPageY = e.originalEvent.touches[0].pageY;
+	}
+
+	$("body").on('mousemove touchmove', (e) => {
+		let pageX = e.pageX;
+		let pageY = e.pageY;
+
+		if (e.originalEvent.touches && e.originalEvent.touches.length) {
+			pageX = e.originalEvent.touches[0].pageX;
+			pageY = e.originalEvent.touches[0].pageY;
+		}
+
+		e.stopPropagation();
+		e.preventDefault();
+
+		const deltaPageX = pageX - oldPageX;
+		const deltaPageY = pageY - oldPageY;
+
+		const angle = Math.atan2(deltaPageY, deltaPageX);
+		const dist = Math.sqrt(Math.pow(deltaPageX, 2) + Math.pow(deltaPageY, 2));
+
+		let left = DRIVE_CONTROL_RADIUS + deltaPageX;
+		let top = DRIVE_CONTROL_RADIUS + deltaPageY;
+		if (dist > DRIVE_CONTROL_RADIUS) {
+			left = Math.cos(angle) * DRIVE_CONTROL_RADIUS + DRIVE_CONTROL_RADIUS;
+			top = Math.sin(angle) * DRIVE_CONTROL_RADIUS + DRIVE_CONTROL_RADIUS;
+		}
+
+		positionThrottleFunc(angle, dist);
+
+		$("#driveControlThumb").css({ left, top });
+	});
+
+	$("body").one('mouseup touchend', () => {
+		$("body").off('mousemove touchmove');
+		$("#driveControlThumb").css({
+			left: `50%`,
+			top: `50%`,
+		});
+		// Stop all movement
+		httpPutAsync("/motor",JSON.stringify({left_speed:0, right_speed:0}));
+	});
+});
+</script>
+
+<style>
+	#driveControl {
+		border-radius: 100%;
+		width: 200px;
+		height: 200px;
+		border: solid 3px gray;
+		margin: 5rem auto;
+		position: relative;
+	}
+	#driveControlThumb {
+		width: 50px;
+		height: 50px;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		background-color: gray;
+		border-radius: 100%;
+		touch-action: pan-x pan-y;
+	}
+</style>
+
+</html>

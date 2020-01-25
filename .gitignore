@@ -1,52 +1,76 @@
-# Prerequisites
-*.d
-
-# Object files
+.config
 *.o
-*.ko
-*.obj
-*.elf
+*.pyc
 
-# Linker output
-*.ilk
-*.map
-*.exp
+# gtags
+GTAGS
+GRTAGS
+GPATH
 
-# Precompiled Headers
-*.gch
-*.pch
+# emacs
+.dir-locals.el
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+# emacs temp file suffixes
+*~
+.#*
+\#*#
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# eclipse setting
+.settings
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# MacOS directory files
+.DS_Store
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Example project files
+examples/**/sdkconfig
+examples/**/sdkconfig.old
+examples/**/build
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# Doc build artifacts
+docs/*/_build/
+docs/*/doxygen-warning-log.txt
+docs/*/sphinx-warning-log.txt
+docs/*/sphinx-warning-log-sanitized.txt
+docs/*/xml/
+docs/*/xml_in/
+docs/*/man/
+docs/doxygen_sqlite3.db
+
+# Unit test app files
+tools/unit-test-app/sdkconfig
+tools/unit-test-app/sdkconfig.old
+tools/unit-test-app/build
+tools/unit-test-app/builds
+tools/unit-test-app/output
+
+# IDF monitor test
+tools/test_idf_monitor/outputs
+
+TEST_LOGS
+
+# AWS IoT Examples require device-specific certs/keys
+examples/protocols/aws_iot/*/main/certs/*.pem.*
+
+# gcov coverage reports
+*.gcda
+*.gcno
+coverage.info
+coverage_report/
+
+# Windows tools installer build
+tools/windows/tool_setup/.*
+tools/windows/tool_setup/input
+tools/windows/tool_setup/dl
+tools/windows/tool_setup/keys
+tools/windows/tool_setup/Output
+
+test_multi_heap_host
+
+# VS Code Settings
+.vscode/
+
+# Results for the checking of the Python coding style
+flake8_output.txt
+
+# ESP-IDF library 
+build
